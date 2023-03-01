@@ -1,47 +1,44 @@
-const crypto = require('crypto');
-const fs = require('fs');
 const path = require('path');
-const db = new Map();
+const betterSqlite3 = require('better-sqlite3');
 const Contact = require('./Contact');
 
-//db.set('a593c7cf-889d-4e81-bf0a-76cfd2d9810d', {firstName: 'John', lastName: "Doe", email: 'johndoe@gmail.com', notes: 'Sample Notes Text', id: 'a593c7cf-889d-4e81-bf0a-76cfd2d9810d'})
-//db.set('7054c36e-d85e-41d3-8fd8-a996e0cac276', {firstName: 'Jodio', lastName: "Joestar", email: 'jjoestar@gmail.com', notes: 'This is a story about...', id: '7054c36e-d85e-41d3-8fd8-a996e0cac276'})
+const db = new betterSqlite3(path.join(__dirname, '../data/contacts.sqlite'), { verbose: console.log });
 
-const loadData = () => {
-  const jsonData = fs.readFileSync(path.join(__dirname, '../data/contacts.json'));
-  const contactsArray = JSON.parse(jsonData);
-  contactsArray.forEach(element => {
-    const aContact = new Contact(element[1].id, element[1].firstName, element[1].lastName, element[1].email, element[1].notes,);
-    db.set(aContact.id, aContact);
-  });
-  console.log(db);
-};
-
-const saveData = () => {
-  const stringifyData = JSON.stringify(Array.from(db));
-  fs.writeFileSync(path.join(__dirname, '../data/contacts.json'), stringifyData);
-};
-
-
+const createStmt = db.prepare("CREATE TABLE IF NOT EXISTS contacts (id INTEGER PRIMARY KEY AUTOINCREMENT, firstName TEXT, lastName TEXT, email TEXT, notes TEXT)");
+createStmt.run();
 
 const repo = {
-  findAll: () => Array.from(db.values()),
-  findById: (uuid) => db.get(uuid),
+  findAll: () => {
+    const stmt = db.prepare("SELECT * FROM contacts");
+    const rows = stmt.all();
+    let contacts = [];
+    rows.forEach((row) => {
+      const aContact = new Contact(row.id, row.firstName, row.lastName, row.email, row.notes);
+      contacts.push(aContact);
+    });
+    return contacts;
+  },
+  findById: (uuid) => {
+    const stmt = db.prepare("SELECT * FROM contacts WHERE id = ?");
+    const row = stmt.get(uuid);
+    return new Contact(row.id, row.firstName, row.lastName,  row.email, row.notes);
+  },
   create: (contact) => {
-    contact.id = crypto.randomUUID();
-    db.set(contact.id, contact);
-    saveData();
+    const stmt = db.prepare("INSERT INTO contacts (firstName, lastName, email, notes) VALUES (?, ?, ?, ?)");
+    const info = stmt.run(contact.firstName, contact.lastName, contact.email, contact.notes);
+    console.log(` Contact Created with id: ${info.lastInsertRowid}`);
   },
   deleteByID: (uuid) => {
-    db.delete(uuid)
-    saveData();
+    const stmt = db.prepare("DELETE FROM contacts WHERE id = ?");
+    const info = stmt.run(uuid);
+    console.log(`rows affected: ${info.changes}`);
   },
   update: (contact) => {
-    db.set(contact.id, contact)
-    saveData();
+   const stmt = db.prepare("UPDATE contacts SET firstName = ?, lastName = ?, email = ?, notes = ? WHERE id = ?");
+   const info = stmt.run(contact.firstName, contact.lastName, contact.email, contact.notes, contact.id);
+   console.log(`rows affected: ${info.changes}`);
   },
 };
 
-loadData();
 
 module.exports = repo;
