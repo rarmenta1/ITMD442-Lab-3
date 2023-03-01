@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  h1= title
+  p List of Contacts
+  a(href='/contacts/add') Add a contact
+  hr
+  if contacts.length > 0
+    #contacts-wrapper 
+    <table style="width:100%">
+      <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email Address </th>
+      </tr>
+      each val in contacts 
+        tr.contacts-list 
+          th(data-contactid=val.id)
+            a(href='/contacts/' + val.id)= val.firstName
+          th(data-contactid=val.id)
+            a(href='/contacts/' + val.id)= val.lastName
+          th(data-contactid=val.id)
+            a(href='/contacts/' + val.id)= val.email
+    </table>

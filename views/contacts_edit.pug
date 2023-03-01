@@ -1,0 +1,33 @@
+extends layout
+
+block content
+  h1= title
+  p Use the form below to add edit this contact.
+  hr
+  if msg 
+    p(class='redtext')= msg
+  form(method='POST', action='/contacts/' + contact.id + '/edit')
+    <label for="fname">First name:</label>
+    | 
+    input(type='text', name='firstName', value=contact.firstName)
+    <br>
+    <br>
+    <label for="lastname">Last name:</label>
+    | 
+    input(type='text', name='lastName', value=contact.lastName)
+    <br>
+    <br>
+    <label for="email">Email:</label>
+    | 
+    input(type='email', name='email', value=contact.email)
+    <br>
+    <br>
+    <label for="notes">Notes:</label>
+    | 
+    input(type='text', name='notes', value=contact.notes)
+    | 
+    <br>
+    <br>
+    button(type='submit') Save Changes 
+    | 
+    a(href='/contacts/' + contact.id) Cancel 
