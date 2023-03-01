@@ -4,8 +4,10 @@ block content
   h1= title
   p Use the form below to add a contact.
   hr
-  if msg 
-    p(class='redtext')= msg
+  if msg
+    ul 
+      each val in msg 
+        li(class='redtext')= val.msg 
   form(method='POST', action='/contacts/add')
     <label for="fname">First name:</label>
     | 
